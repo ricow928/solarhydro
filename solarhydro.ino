@@ -40,7 +40,7 @@ float charge_upper = 28.8;      // Volts, above which turn off charging if time 
 float charge_lower = 28.4;      // Volts, below which begin charging for at least time_lim cycles
 bool charging = true;           // Default to enable charging
 int charge_time = 0;            // Counter for number of cycles of charging
-int time_lim = 120;             // Number of cycles to charge after dropping below min (estimate 500 ms/cycle)
+int time_lim = 60;             // Number of cycles to charge after dropping below min (estimate 1000 ms/cycle)
 int batt_a_pin = A2;            // battery voltage divider measure pin
 int panel_a_pin = A0;           // panel voltage divider measure pin
 
@@ -119,6 +119,15 @@ void loop()
       charge_time = 0;
     }
 
+    // For now, just measure the panel voltage even if it might be
+    // connected to the battery
+    // Get the analog pin measurement
+    float panel_ain = pin_average(panel_a_pin, 10, 50);
+    // calculate panel voltage
+    float v_panel = voltage(panel_ain, Vcc, panel_r1, panel_r2);
+    Serial.print("Panel: "); Serial.print(v_panel); Serial.println (" V");
+    
+
     if (charging){
       charge_time += 1;
     }
@@ -130,6 +139,8 @@ void loop()
     display.setCursor(0,0);
     display.print("V_batt: ");
     display.print(v_batt,1); display.println("V");
+
+    display.print("Vpanel: "); display.print(v_panel,1); display.println("V");
 
     display.print("Deadband: "); display.print(charge_lower, 1);
     display.print("-"); display.print(charge_upper, 1); display.println("V");
