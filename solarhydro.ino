@@ -15,6 +15,7 @@ Adafruit_SSD1306 display(OLED_RESET);
 uint8_t charge_time = 0;            // Counter for number of cycles of charging
 uint8_t run_counter = 0;            // Hacky incrementer for now
 uint8_t panel_pin = 13;             // Pulls down to energize relay
+float panel_voc = 0.0;          // Volts, panel Voc
 
 float voltage(float a_in, float v_ref, float r1, float r2) {
   // implement standard voltage bridge equation based on 1024 sample ADC
@@ -75,7 +76,6 @@ void loop()
     float charge_upper = 28.8;      // Volts, above which turn off charging if time is satisfied
     float charge_lower = 28.4;      // Volts, below which begin charging for at least time_lim cycles
     float max_v_batt = 34.0;        // Volts, if battery is over this number, disable charging
-    float panel_voc = 0.0;          // Volts, panel Voc
     uint8_t time_lim = 60;              // Number of cycles to charge after dropping below min (estimate 1000 ms/cycle)
 
     // MEASURE BATTERY VOLTAGE
@@ -128,10 +128,6 @@ void loop()
         digitalWrite(panel_pin, HIGH);
         delay(2000);
         // Get the analog pin measurement
-        display.clearDisplay();
-        display.setCursor(0,0);
-        display.println(F("Measuring VOC"));
-        display.display();
         panel_ain = pin_average(panel_a_pin, 10, 50);
         // calculate panel voltage
         panel_voc = voltage(panel_ain, Vcc, panel_r1, panel_r2);
