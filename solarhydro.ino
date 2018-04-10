@@ -1,3 +1,4 @@
+// Power management for hydroponics solar panel / battery system
 
 #include <SPI.h>
 #include <Wire.h>
@@ -68,6 +69,8 @@ void loop()
     // Setup-specific values
     uint8_t batt_a_pin = A2;        // battery voltage divider measure pin
     uint8_t panel_a_pin = A0;       // panel voltage divider measure pin
+    uint8_t current_a_pin = A1;     // Pin to read current sensor output
+
     float Vcc = 5.03;               // Volts supplied by Arduino
     float batt_r1 = 9.78;           // kohms, large resistor of battery bridge
     float batt_r2 = 0.979;          // kohms, small resistor of battery bridge
@@ -76,10 +79,11 @@ void loop()
     bool charging = true;           // Default to enable charging
     float charge_upper = 28.8;      // Volts, above which turn off charging if time is satisfied
     float charge_lower = 28.4;      // Volts, below which begin charging for at least time_lim cycles
-    float max_v_batt = 34.0;        // Volts, if battery is over this number, disable charging
+    float max_v_batt = 32.0;        // Volts, if battery is over this number, disable charging
     uint8_t time_lim = 60;          // Number of cycles to charge after dropping below min (estimate 1000 ms/cycle)
     float current_slope = 0.136;    // Volts / A (Assuming +/- 15.5A ACS711 sensor at 5V input)
-    uint8_t current_a_pin = A1;     // Pin to read current sensor output
+    int oc_time = 120;              // Cycles to run before grabbing Voc and ammeter offset
+
 
     // MEASURE BATTERY VOLTAGE
     float batt_ain = pin_average(batt_a_pin, 10, 50);
@@ -121,11 +125,13 @@ void loop()
     run_counter += 1;
 
     // Let's see about the open-circuit voltage and write some stuff down
-    // We only want to do this once in awhile (say once a minute?)
-    if (run_counter == 60){
+    // We only want to do this once in awhile (say once every 2 mins?)
+    if (run_counter == oc_time){
       // if the panel is disconnected, VOC is just the panel voltage as-is
       if (!charging){
+        // Regularly measured voltage is VOC
         panel_voc = v_panel;
+        // Get ammeter offset
         current_counts = pin_average(current_a_pin, 10, 33);
         current_offset = Vcc * current_counts / 1024.0;
       }
@@ -150,14 +156,12 @@ void loop()
         // Reconnect panel
         digitalWrite(panel_pin, LOW);
       }
+      run_counter = 0;
     }
 
     // Reset counters if necessary
     if (charge_time > time_lim){
       charge_time = 0;
-    }
-    if (run_counter > 60){
-      run_counter = 0;
     }
 
     // Tell me what you know
@@ -176,7 +180,7 @@ void loop()
     display.print(F("Charge: ")); display.println(charging);
 
     display.print(F("Charging: ")); display.print(charge_time); display.println(F(" cycles"));
-    display.print(F("Current volts: ")); display.println(v_amp, 2);
+
     display.print(F("Panel Current: ")); display.print(panel_current, 2); display.println(F("A"));
     display.display();
     
