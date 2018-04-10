@@ -65,9 +65,9 @@ void setup()
 void loop()
 {
     // Setup-specific values
-    uint8_t batt_a_pin = A2;            // battery voltage divider measure pin
-    uint8_t panel_a_pin = A0;           // panel voltage divider measure pin
-    float Vcc = 5.03;               // Volts supplied by Arduino
+    uint8_t batt_a_pin = A2;        // battery voltage divider measure pin
+    uint8_t panel_a_pin = A0;       // panel voltage divider measure pin
+    float Vcc = 4.8;               // Volts supplied by Arduino
     float batt_r1 = 9.78;           // kohms, large resistor of battery bridge
     float batt_r2 = 0.979;          // kohms, small resistor of battery bridge
     float panel_r1 = 9.75;          // kohms, large resistor of panel bridge
@@ -76,7 +76,10 @@ void loop()
     float charge_upper = 28.8;      // Volts, above which turn off charging if time is satisfied
     float charge_lower = 28.4;      // Volts, below which begin charging for at least time_lim cycles
     float max_v_batt = 34.0;        // Volts, if battery is over this number, disable charging
-    uint8_t time_lim = 60;              // Number of cycles to charge after dropping below min (estimate 1000 ms/cycle)
+    uint8_t time_lim = 60;          // Number of cycles to charge after dropping below min (estimate 1000 ms/cycle)
+    float current_offset = 2.40;    // Volts, output of current sensor at 0A (with ~5V input)
+    float current_slope = 0.136;    // Volts / A (Assuming +/- 15.5A ACS711 sensor at 5V input)
+    uint8_t current_a_pin = A1;     // Pin to read current sensor output
 
     // MEASURE BATTERY VOLTAGE
     float batt_ain = pin_average(batt_a_pin, 10, 50);
@@ -96,13 +99,21 @@ void loop()
       charge_time = 0;
     }
 
+    // MEASURE PANEL VOLTAGE
     // For now, just measure the panel voltage even if it might be
     // connected to the battery
     // Get the analog pin measurement
     float panel_ain = pin_average(panel_a_pin, 10, 50);
     // calculate panel voltage
     float v_panel = voltage(panel_ain, Vcc, panel_r1, panel_r2);
-    
+
+
+    // MEASURE CHARGE CURRENT
+    float current_counts = pin_average(current_a_pin, 10, 50);
+    float v_amp = Vcc * current_counts / 1024.0;
+    float current_v = current_offset - v_amp;
+    float panel_current = -1.0 * current_v / current_slope;
+
     if (charging){
       charge_time += 1;
     }
@@ -160,6 +171,8 @@ void loop()
     display.print(F("Charge: ")); display.println(charging);
 
     display.print(F("Charging: ")); display.print(charge_time); display.println(F(" cycles"));
+    display.print(F("Current volts: ")); display.println(v_amp, 2);
+    display.print(F("Panel Current: ")); display.print(panel_current, 2); display.println(F("A"));
     display.display();
     
 
