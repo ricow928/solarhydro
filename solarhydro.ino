@@ -103,13 +103,13 @@ void loop()
     // For now, just measure the panel voltage even if it might be
     // connected to the battery
     // Get the analog pin measurement
-    float panel_ain = pin_average(panel_a_pin, 10, 50);
+    float panel_ain = pin_average(panel_a_pin, 10, 33);
     // calculate panel voltage
     float v_panel = voltage(panel_ain, Vcc, panel_r1, panel_r2);
 
 
     // MEASURE CHARGE CURRENT
-    float current_counts = pin_average(current_a_pin, 10, 50);
+    float current_counts = pin_average(current_a_pin, 10, 33);
     float v_amp = Vcc * current_counts / 1024.0;
     float current_v = current_offset - v_amp;
     float panel_current = -1.0 * current_v / current_slope;
@@ -126,6 +126,8 @@ void loop()
       // if the panel is disconnected, VOC is just the panel voltage as-is
       if (!charging){
         panel_voc = v_panel;
+        current_counts = pin_average(current_a_pin, 10, 33);
+        current_offset = Vcc * current_counts / 1024.0;
       }
       // if the panel is connected, don't necessarily want to interrupt charging to measure,
       // so only do once
@@ -142,6 +144,9 @@ void loop()
         panel_ain = pin_average(panel_a_pin, 10, 50);
         // calculate panel voltage
         panel_voc = voltage(panel_ain, Vcc, panel_r1, panel_r2);
+        // Get ammeter offset
+        current_counts = pin_average(current_a_pin, 10, 50);
+        current_offset = Vcc * current_counts / 1024.0;
         // Reconnect panel
         digitalWrite(panel_pin, LOW);
       }
