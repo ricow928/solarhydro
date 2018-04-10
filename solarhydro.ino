@@ -15,7 +15,8 @@ Adafruit_SSD1306 display(OLED_RESET);
 uint8_t charge_time = 0;            // Counter for number of cycles of charging
 uint8_t run_counter = 0;            // Hacky incrementer for now
 uint8_t panel_pin = 13;             // Pulls down to energize relay
-float panel_voc = 0.0;          // Volts, panel Voc
+float panel_voc = 0.0;              // Volts, panel Voc
+float current_offset = 2.40;        // Volts, output of current sensor at 0A (with ~5V input)
 
 float voltage(float a_in, float v_ref, float r1, float r2) {
   // implement standard voltage bridge equation based on 1024 sample ADC
@@ -67,7 +68,7 @@ void loop()
     // Setup-specific values
     uint8_t batt_a_pin = A2;        // battery voltage divider measure pin
     uint8_t panel_a_pin = A0;       // panel voltage divider measure pin
-    float Vcc = 4.8;               // Volts supplied by Arduino
+    float Vcc = 5.03;               // Volts supplied by Arduino
     float batt_r1 = 9.78;           // kohms, large resistor of battery bridge
     float batt_r2 = 0.979;          // kohms, small resistor of battery bridge
     float panel_r1 = 9.75;          // kohms, large resistor of panel bridge
@@ -77,7 +78,6 @@ void loop()
     float charge_lower = 28.4;      // Volts, below which begin charging for at least time_lim cycles
     float max_v_batt = 34.0;        // Volts, if battery is over this number, disable charging
     uint8_t time_lim = 60;          // Number of cycles to charge after dropping below min (estimate 1000 ms/cycle)
-    float current_offset = 2.40;    // Volts, output of current sensor at 0A (with ~5V input)
     float current_slope = 0.136;    // Volts / A (Assuming +/- 15.5A ACS711 sensor at 5V input)
     uint8_t current_a_pin = A1;     // Pin to read current sensor output
 
