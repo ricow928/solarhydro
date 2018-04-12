@@ -77,8 +77,8 @@ void loop()
     float panel_r1 = 9.75;          // kohms, large resistor of panel bridge
     float panel_r2 = 0.979;         // kohms, small resistor of panel bridge
     bool charging = true;           // Default to enable charging
-    float charge_upper = 28.8;      // Volts, above which turn off charging if time is satisfied
-    float charge_lower = 28.4;      // Volts, below which begin charging for at least time_lim cycles
+    float charge_upper = 30.0;      // Volts, above which turn off charging if time is satisfied
+    float charge_lower = 26.4;      // Volts, below which begin charging for at least time_lim cycles
     float max_v_batt = 32.0;        // Volts, if battery is over this number, disable charging
     uint8_t time_lim = 120;          // Number of cycles to charge after dropping below min (estimate 1000 ms/cycle)
     float current_slope = 0.136;    // Volts / A (Assuming +/- 15.5A ACS711 sensor at 5V input)
